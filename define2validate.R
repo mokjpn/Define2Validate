@@ -1,0 +1,148 @@
+library(R4DSXML)
+library(testthat)
+library(validate)
+
+getAttr <- function(Nodeset, Attr){
+  sapply(Nodeset, function(el) xmlGetAttr(el, Attr, default = NA))
+}
+
+getWhereClause <- function(valueListOID, varMD, docNodeset) {
+  namespaces <- c( ns='http://www.cdisc.org/ns/odm/v1.3', 
+                   def='http://www.cdisc.org/ns/def/v2.0' )
+  vldNodes <- getNodeSet(docNodeset, "//def:ValueListDef", namespaces)
+  vld.OIDs <- getAttr( Nodeset = vldNodes, Attr = "OID" )
+  if(length(vld.OIDs) < 1) return(NULL)
+  vldNode <- vldNodes[[valueListOID %in% vld.OIDs]]
+  itemNodes <- getNodeSet(vldNode, "ns:ItemRef", namespaces)
+  itemOIDs <- getAttr(Nodeset=itemNodes, Attr="OID")
+  ## %notin% operator is not defined in R. But that can be defined as:
+  ## "%notin%" <- function(x, table) !match(x, table, nomatch = 0) > 0
+  compars <- c("LT"="<", "LE"="<=", "GT"=">", "GE"=">=", "EQ"="==", "NE"="!=", "IN"="%in%", "NOTIN"="%notin%")
+  vldf <- NULL
+  for(i in 1:length(itemNodes)) {
+    vlitemOID <- xmlGetAttr(itemNodes[[i]], "ItemOID",default=NA)
+    wcRefNode <- getNodeSet(itemNodes[[i]], "def:WhereClauseRef", namespaces)
+    wcoid <- getAttr(Nodeset=wcRefNode, Attr="WhereClauseOID")
+    rcNodes <- getNodeSet(docNodeset, paste("//def:WhereClauseDef[@OID='",wcoid, "']/ns:RangeCheck",sep=""), namespaces)
+    if(length(rcNodes) > 0) {
+      vlstr <- NULL
+      for(j in 1:length(rcNodes)) {
+        itemoid <- xmlGetAttr(rcNodes[[j]], "ItemOID", default=NA)
+        comparator <- xmlGetAttr(rcNodes[[j]], "Comparator", default=NA)
+        checkvalues <- getNodeSet(rcNodes[[j]], "ns:CheckValue", namespaces)
+        if(length(checkvalues)>1) {
+          values <- NULL
+          for(k in 1:length(checkvalues)) {
+            values <- append(values, xmlValue(checkvalues[[k]]))
+          }
+          checkstr <- paste("c(\"", paste(values, collapse="\",\""),"\")",sep="")
+        } else {
+          checkstr <- paste("\"", xmlValue(checkvalues[[1]]), "\"",sep="")
+        }
+        itemName <- subset(varMD, IR_ItemOID == itemoid)$ID_Name
+        compaStr <- compars[comparator]
+        vlstr <- append(vlstr, paste(itemName, compaStr, checkstr))
+      }
+    }
+    vldf <- rbind(vldf, data.frame(IR_ItemOID=vlitemOID, WhereClause=
+                                     paste("(!(", paste(vlstr, collapse=" & "), "))")))
+  }
+  return(vldf)
+  }
+
+md2validate <- function(metadata, varname=NA) {
+  expect_equal(nrow(metadata),1)
+  # if the metadata is value-level metadata, variable name should be given as varName argument. 
+  # otherwise, get variable name from the metadata.
+  if(is.na(varname)) {
+    varname <- metadata$"ID_Name"
+  }
+  varLength <- metadata$"ID_Length"
+  exprdf <- data.frame()
+  
+  if(!is.na(varLength)) {
+    exprdf <- rbind(exprdf, data.frame(
+      expr=paste("nchar(as.character(", varname, ")) <= ", varLength, sep=""),
+      name=paste("Length of ", varname,sep="")
+    ))
+  }
+  varMandatory <- metadata$"IR_Mandatory"
+  expect_false(is.na(varMandatory))
+  if(varMandatory == "Yes") {
+    exprdf <- rbind(exprdf, data.frame(
+      expr=paste("!is.na(", varname, ")", sep=""),
+      name=paste(varname, " is mandatory",sep="")
+    ))
+  }
+  
+  varDataType <- metadata$"ID_DataType"
+  expect_false(is.na(varDataType))
+  if(varDataType == "integer") {
+    exprdf <- rbind(exprdf, data.frame(
+      expr=paste("regexpr(\"^[0-9-]+$\",as.character(", varname,")) == 1", sep=""),
+      name=paste(varname, " should be integer",sep="")
+    ))
+  }
+  if(varDataType == "date") {
+    exprdf <- rbind(exprdf, data.frame(
+      expr=paste("regexpr(\"^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})$\",as.character(", varname,")) == 1", sep=""),
+      name=paste(varname, " should be Date",sep="")
+    ))
+  }
+  varCodeList <- metadata$"ID_CodeListOID"
+  if(!is.na(varCodeList)) {
+    exprdf <- rbind(exprdf, data.frame(
+      expr=paste("as.character(", varname, ") %in% CT[CT$OID == \"", varCodeList, "\", \"CodedValue\"]", sep=""),
+      name=paste(varname, " should follow codelist " , varCodeList,sep="")
+    ))
+  }
+  valuelistOID <- metadata$"ID_ValueListOID"
+  return(list(rules=exprdf, valuelistOID=valuelistOID))
+}
+
+define2validate <- function(domain, file="exampleRules.yaml", definexml="Odm_Define.xml", overwrite=FALSE) {
+  varmd <- subset(getVarMD(definexml), IGD_Name == domain)
+  if(file.exists(file) && overwrite == FALSE) {
+    stop(paste("File", file, "exists, but overwrite option is not set."))
+  }
+  cat(file=file, append=FALSE, "")
+  out <- function(...) cat(file=file, append=TRUE, paste(...,"\n",sep=""))
+  vloids <- NULL
+  out("rules:")
+  expect_gt(nrow(varmd), 0)
+  for(row in 1:nrow(varmd)) {
+    r <- md2validate(varmd[row,])
+    if(!is.null(r$valuelistOID) && !is.na(r$valuelistOID)) {
+      vloids <- append(vloids, r$valuelistOID)
+    }
+    #browser()
+    if(nrow(r$rules)>0){
+      for(i in 1:nrow(r$rules)) {
+        out('-')
+        out("  expr: '",r$rules[i,"expr"], "'")
+        out('  name: ',r$rules[i,"name"])
+      }
+    }
+  }
+  valmd <- getValMD(definexml)
+  docnode <- xmlTreeParse( definexml, useInternalNodes = T )
+  whereclauses <- data.frame()
+  for(vloid in vloids) {
+    whereclauses <- getWhereClause(vloid, varmd, docnode)
+    expect_gt(nrow(whereclauses),0)
+    for(i in 1:nrow(whereclauses)) {
+        wc <- whereclauses[i,]
+        itemmd <- subset(valmd, IR_ItemOID == wc$IR_ItemOID)
+        expect_equal(nrow(itemmd), 1)
+        r <- md2validate(itemmd, subset(varmd, ID_ValueListOID==vloid)$ID_Name)
+        if(nrow(r$rules)>0){
+          for(i in 1:nrow(r$rules)) {
+            out('-')
+            out("  expr: '",wc$WhereClause, " | ", r$rules[i,"expr"], "'")
+            out('  name: ',r$rules[i,"name"])
+          }
+        }
+      }
+    }
+    out("---")
+}
