@@ -50,12 +50,13 @@ getWhereClause <- function(valueListOID, varMD, docNodeset) {
   return(vldf)
   }
 
-md2validate <- function(metadata, varname=NA) {
+md2validate <- function(metadata, varname=NA, descname=NA) {
   expect_equal(nrow(metadata),1)
   # if the metadata is value-level metadata, variable name should be given as varName argument. 
   # otherwise, get variable name from the metadata.
   if(is.na(varname)) {
     varname <- metadata$"ID_Name"
+    descname <- varname
   }
   varLength <- metadata$"ID_Length"
   exprdf <- data.frame()
@@ -63,7 +64,7 @@ md2validate <- function(metadata, varname=NA) {
   if(!is.na(varLength)) {
     exprdf <- rbind(exprdf, data.frame(
       expr=paste("nchar(as.character(", varname, ")) <= ", varLength, sep=""),
-      name=paste("Length of ", varname,sep="")
+      name=paste("Length of ", descname,sep="")
     ))
   }
   varMandatory <- metadata$"IR_Mandatory"
@@ -71,7 +72,7 @@ md2validate <- function(metadata, varname=NA) {
   if(varMandatory == "Yes") {
     exprdf <- rbind(exprdf, data.frame(
       expr=paste("!is.na(", varname, ")", sep=""),
-      name=paste(varname, " is mandatory",sep="")
+      name=paste(descname, " is mandatory",sep="")
     ))
   }
   
@@ -80,20 +81,26 @@ md2validate <- function(metadata, varname=NA) {
   if(varDataType == "integer") {
     exprdf <- rbind(exprdf, data.frame(
       expr=paste("regexpr(\"^[0-9-]+$\",as.character(", varname,")) == 1", sep=""),
-      name=paste(varname, " should be integer",sep="")
+      name=paste(descname, " should be integer",sep="")
+    ))
+  }
+  if(varDataType == "float") {
+    exprdf <- rbind(exprdf, data.frame(
+      expr=paste("(regexpr(\"^[0-9.+-eE]+$\",as.character(", varname,")) == 1) & !is.na(as.numeric(", varname, "))",sep=""),
+      name=paste(descname, " should be float",sep="")
     ))
   }
   if(varDataType == "date") {
     exprdf <- rbind(exprdf, data.frame(
       expr=paste("regexpr(\"^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})$\",as.character(", varname,")) == 1", sep=""),
-      name=paste(varname, " should be Date",sep="")
+      name=paste(descname, " should be Date",sep="")
     ))
   }
   varCodeList <- metadata$"ID_CodeListOID"
   if(!is.na(varCodeList)) {
     exprdf <- rbind(exprdf, data.frame(
       expr=paste("as.character(", varname, ") %in% CT[CT$OID == \"", varCodeList, "\", \"CodedValue\"]", sep=""),
-      name=paste(varname, " should follow codelist " , varCodeList,sep="")
+      name=paste(descname, " should follow codelist " , varCodeList,sep="")
     ))
   }
   valuelistOID <- metadata$"ID_ValueListOID"
@@ -134,7 +141,8 @@ define2validate <- function(domain, file="exampleRules.yaml", definexml="Odm_Def
         wc <- whereclauses[i,]
         itemmd <- subset(valmd, IR_ItemOID == wc$IR_ItemOID)
         expect_equal(nrow(itemmd), 1)
-        r <- md2validate(itemmd, subset(varmd, ID_ValueListOID==vloid)$ID_Name)
+        tname <- subset(varmd, ID_ValueListOID==vloid)$ID_Name
+        r <- md2validate(itemmd, tname, paste(itemmd$ID_Name, "(", tname, ")", sep=""))
         if(nrow(r$rules)>0){
           for(i in 1:nrow(r$rules)) {
             out('-')
