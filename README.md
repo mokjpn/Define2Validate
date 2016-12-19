@@ -2,6 +2,20 @@
 Validate CDISC Dataset-XML with corresponding Define-XML metadata, using R and R4DSXML.
 Currently only a few rules are implemented, but this supports variable-level metadata, value-level metadata, and controlled terminology defined in your Define-XML.
 
+## Install
+
+1. Install the required package.
+[testthat](https://cran.r-project.org/web/packages/testthat/index.html), [validate](https://cran.r-project.org/web/packages/validate/index.html) from CRAN, [R4DSXML](https://github.com/DataDrivenInc/R4DSXML) from GitHub.
+```{r}
+install.packages(c("testthat","validate","devtools"))
+library(devtools)
+install_github("DataDrivenInc/R4DSXML/R4DSXML")
+```
+1. Load the script.
+```{r}
+source("https://raw.githubusercontent.com/mokjpn/Define2Validate/master/define2validate.R")
+```
+
 ## Usage
 
 Assume you have your Define-XML file(`Odm_Define.xml`) for your LB domain dataset(`Odm_LB.xml`).
@@ -12,7 +26,6 @@ library(R4DSXML)
 library(testthat)
 library(validate)
 ```
-Note: R4DSXML should be [my forked version](https://github.com/mokjpn/R4DSXML).
 1. Specify domain of your Dataset-XML
 ```{r}
 Domain="LB"
