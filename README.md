@@ -11,7 +11,7 @@ install.packages(c("testthat","validate","devtools"))
 library(devtools)
 install_github("DataDrivenInc/R4DSXML/R4DSXML")
 ```
-1. Load the script.
+2. Load the script.
 ```{r}
 source("https://raw.githubusercontent.com/mokjpn/Define2Validate/master/define2validate.R")
 ```
@@ -26,23 +26,23 @@ library(R4DSXML)
 library(testthat)
 library(validate)
 ```
-1. Specify domain of your Dataset-XML
+2. Specify domain of your Dataset-XML
 ```{r}
 Domain="LB"
 ```
-1. Call `define2validate()` to make validation rule file for [validate](https://cran.r-project.org/web/packages/validate/index.html) package. Validation rules will be stored in `exampleRules.yaml` file.
+3. Call `define2validate()` to make validation rule file for [validate](https://cran.r-project.org/web/packages/validate/index.html) package. Validation rules will be stored in `exampleRules.yaml` file.
 ```{r}
 define2validate(Domain, file="exampleRules.yaml", definexml="Odm_Define.xml")
 ```
-1. Create `validator` object.
+4. Create `validator` object.
 ```{r}
 v <- validator(.file="exampleRules.yaml") 
 ```
-1. Read your dataset.
+5. Read your dataset.
 ```{r}
 x <- read.dataset.xml(paste("Odm_", Domain, ".xml", sep=""), "Odm_Define.xml") 
 ```
-1. Read Controlled Terminology.
+6. Read Controlled Terminology.
 ```{r}
 CT <- getCT("Odm_Define.xml")
 ```
@@ -51,7 +51,7 @@ Note: variable name for controlled terminology is fixed to "CT".
 ```{r}
 "%notin%" <- function(x, table) !match(x, table, nomatch = 0) > 0
 ```
-1. Do validation and get the summarized result.
+7. Do validation and get the summarized result.
 ```{r}
 cf <- confront(x,v)
 summary(cf)
