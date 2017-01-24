@@ -109,6 +109,9 @@ md2validate <- function(metadata, varname=NA, descname=NA) {
 
 define2validate <- function(domain, file="exampleRules.yaml", definexml="Odm_Define.xml", overwrite=FALSE) {
   varmd <- subset(getVarMD(definexml), IGD_Name == domain)
+  if(nrow(varmd) < 1) {
+    stop(paste("No definition of domain ", domain,". Please specify correct set of domain and corresponding Define-XML.",sep=""))
+  }
   if(file.exists(file) && overwrite == FALSE) {
     stop(paste("File", file, "exists, but overwrite option is not set."))
   }
