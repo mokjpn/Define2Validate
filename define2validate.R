@@ -94,7 +94,7 @@ md2validate <- function(metadata, varname=NA, descname=NA) {
   }
   if(varDataType == "date") {
     exprdf <- rbind(exprdf, data.frame(
-      expr=paste("regexpr(\"^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})$\",as.character(", varname,")) == 1", sep=""),
+      expr=paste("regexpr(\"^([0-9]{4})-([0-9]{2})-([0-9]{2})(T([0-9]{2}):([0-9]{2}):([0-9]{2}))*$\",as.character(", varname,")) == 1", sep=""),
       name=paste(descname, " should be Date",sep="")
     ))
   }
