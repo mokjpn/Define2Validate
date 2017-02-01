@@ -13,6 +13,7 @@ library(testthat)
 library(validate)
 #source("https://raw.githubusercontent.com/mokjpn/Define2Validate/master/define2validate.R")
 source("../define2validate.R")
+source("mybarplot.R")
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -65,7 +66,7 @@ server <- function(input, output) {
      summary(doValidate())
    })
    output$resultsFigure <- renderPlot({
-     barplot(doValidate())
+     mybarplot(doValidate())
    })
 }
 
