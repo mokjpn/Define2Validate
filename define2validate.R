@@ -12,7 +12,9 @@ getWhereClause <- function(valueListOID, varMD, docNodeset) {
   vldNodes <- getNodeSet(docNodeset, "//def:ValueListDef", namespaces)
   vld.OIDs <- getAttr( Nodeset = vldNodes, Attr = "OID" )
   if(length(vld.OIDs) < 1) return(NULL)
-  vldNode <- vldNodes[[valueListOID %in% vld.OIDs]]
+  vldselect <- vld.OIDs == valueListOID
+  if(sum(vldselect) > 1 ) stop(paste("More than one def:ValueListDef for value list OID ", valueListOID))
+  vldNode <- vldNodes[[which(vldselect)]]
   itemNodes <- getNodeSet(vldNode, "ns:ItemRef", namespaces)
   itemOIDs <- getAttr(Nodeset=itemNodes, Attr="OID")
   ## %notin% operator is not defined in R. But that can be defined as:
