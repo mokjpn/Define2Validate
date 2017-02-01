@@ -31,7 +31,9 @@ ui <- fluidPage(
         fileInput("datasetxml", "Choose your Dataset-XML v1.0",
                   accept = c("text/plain", "text/xml", ".xml")
         ),
-        selectInput("domain", "Set the domain of your Dataset-XML", c("Please Select"="", "DM"="DM","LB"="LB","VS"="VS","PE"="PE")),
+        selectInput("domain", "Set the domain of your Dataset-XML", c("Please Select"="", "AE"="AE", "CM"="CM", "DA"="DA", "DM"="DM", "DS"="DS", "EG"="EG", 
+            "EX"="EX", "IE"="IE", "LB"="LB","MH"="MH", "PE"="PE", "SC"="SC", "SE"="SE", "SV"="SV", "TA"="TA", "TE"="TE", "TI"="TI", "TS"="TS", "TV"="TV",
+            "VS"="VS" )),
         actionButton("validate", "Validate")
       ),
       
