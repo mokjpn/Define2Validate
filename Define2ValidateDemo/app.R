@@ -11,8 +11,8 @@ library(shiny)
 library(R4DSXML)
 library(testthat)
 library(validate)
-#source("https://raw.githubusercontent.com/mokjpn/Define2Validate/master/define2validate.R")
-source("../define2validate.R")
+source("https://raw.githubusercontent.com/mokjpn/Define2Validate/master/define2validate.R")
+#source("../define2validate.R")
 source("mybarplot.R")
 
 # Define UI for application that draws a histogram
@@ -34,7 +34,9 @@ ui <- fluidPage(
         selectInput("domain", "Set the domain of your Dataset-XML", c("Please Select"="", "AE"="AE", "CM"="CM", "DA"="DA", "DM"="DM", "DS"="DS", "EG"="EG", 
             "EX"="EX", "IE"="IE", "LB"="LB","MH"="MH", "PE"="PE", "SC"="SC", "SE"="SE", "SV"="SV", "TA"="TA", "TE"="TE", "TI"="TI", "TS"="TS", "TV"="TV",
             "VS"="VS" )),
-        actionButton("validate", "Validate")
+        actionButton("validate", "Validate"),
+        p(),
+        a("Source code",href="http://github.com/mokjpn/Define2Validate/")
       ),
       
       # Show a plot of the generated distribution
