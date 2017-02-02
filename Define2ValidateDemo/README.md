@@ -16,21 +16,35 @@ The result of validation will be displayed in the right pane, "Table" tab. For e
 ## "Table" tab
 
 - rule
-  Description of 'rules'. Each rule is a R expression converted from metadata defined in Define-XML.
+
+    Description of 'rules'. Each rule is a R expression converted from metadata defined in Define-XML.
+
 - items
-  Number of records checked.
+
+    Number of records checked.
+    
 - passes
-  Number of records that passes the rule.
+
+    Number of records that passes the rule.
+
 - fails
-  Number of records that does not pass the rule.
+
+    Number of records that does not pass the rule.
 - nNA
-  Number of records that has NA(missing) value for the variable checked.
+
+    Number of records that has NA(missing) value for the variable checked.
+
 - error
-  A logical (true or false) value. If true, there is a error when evaluating the rule. Typically, if there is no controlled terminology definition in your Define-XML file, it will be an error, because external controlled terminology file is not supported yet.
+
+    A logical (true or false) value. If true, there is a error when evaluating the rule. Typically, if there is no controlled terminology definition in your Define-XML file, it will be an error, because external controlled terminology file is not supported yet.
+
 - warning
-  A logical value that indicates whether there is any warning when evaluating the rule.
+
+    A logical value that indicates whether there is any warning when evaluating the rule.
+
 - expression
-  Actual R expression used to validate records.
+
+    Actual R expression used to validate records.
 
 ## If there is any "fails"...
 
