@@ -13,6 +13,8 @@ On the application, specify your Define-XML and corresponding Dataset-XML, then 
 
 The result of validation will be displayed in the right pane, "Table" tab. For each rules, proportion of passed records will be displayed in "Figure" tab. If there are some records which fails to tests, failed rows are extracted in "Failed Records" tab.
 
+To just test the functions, a set of example Define-XML and Dataset-XML files can be found in [CDISC's Dataset-XML release package](https://www.cdisc.org/standards/foundational/dataset-xml).
+
 ## "Table" tab
 
 - rule
