@@ -11,6 +11,7 @@ library(shiny)
 library(R4DSXML)
 library(testthat)
 library(validate)
+library(DT)
 source("https://raw.githubusercontent.com/mokjpn/Define2Validate/master/define2validate.R")
 #source("../define2validate.R")
 source("mybarplot.R")
@@ -36,14 +37,18 @@ ui <- fluidPage(
             "VS"="VS" )),
         actionButton("validate", "Validate"),
         p(),
-        a("Source code",href="http://github.com/mokjpn/Define2Validate/")
+        a("Source code",href="http://github.com/mokjpn/Define2Validate/"),
+        hr(),
+        p("If you find any 'fails' in 'Table' tab, click the cell. Then the data with corresponding error will appear in 'Failed Records' tab.")
+        
       ),
       
       # Show a plot of the generated distribution
       mainPanel(
         tabsetPanel(
-          tabPanel("Table",tableOutput("resultsTable")),
-          tabPanel("Figure", plotOutput("resultsFigure", height="1280px"))
+          tabPanel("Table",DT::dataTableOutput("resultsTable")),
+          tabPanel("Figure", plotOutput("resultsFigure", height="1280px")),
+          tabPanel("Failed Records", tableOutput("failureTable"))
         )
       )
    )
@@ -64,11 +69,24 @@ server <- function(input, output) {
      "%notin%" <- function(x, table) !match(x, table, nomatch = 0) > 0
      confront(x,v)
    })
-   output$resultsTable <- renderTable({
+    output$resultsTable <- DT::renderDataTable({
      res <- doValidate()
      if(is.null(res)) return(NULL)
-     summary(doValidate())
+     datatable(summary(doValidate()),options=list(pageLength = 20),rownames = FALSE, selection = 'none', callback = JS("table.on('click.dt', 'td', function() {
+                                                                                                    var row_=table.cell(this).index().row;
+                                                                                        var col=table.cell(this).index().column;
+                                                                                        var val= table.cell(row_,0).data();
+                                                                                        var data = [row_, col, val];
+                                                                                        Shiny.onInputChange('rows',data );
+    });"))
    })
+   output$failureTable <- renderTable({
+     if(is.null(input$rows)) return(NULL)
+     ft <- read.dataset.xml(input$datasetxml$datapath,input$definexml$datapath)
+     errname <- input$rows[3]
+     ft[!values(doValidate())[,errname],]
+   })
+   
    output$resultsFigure <- renderPlot({
      mybarplot(doValidate())
    })
