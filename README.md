@@ -6,56 +6,75 @@ Currently only a few rules are implemented, but this supports variable-level met
 
 1. Install the required package.
 [testthat](https://cran.r-project.org/web/packages/testthat/index.html), [validate](https://cran.r-project.org/web/packages/validate/index.html) from CRAN, [R4DSXML](https://github.com/DataDrivenInc/R4DSXML) from GitHub.
-    ```{r}
-    install.packages(c("testthat","validate","devtools"))
-    library(devtools)
-    install_github("DataDrivenInc/R4DSXML/R4DSXML")
-    ```
+
+	```{r}
+	install.packages(c("testthat","validate","devtools"))
+	library(devtools)
+	install_github("DataDrivenInc/R4DSXML/R4DSXML")
+	```
+
 2. Load the script.
-    ```{r}
-    source("https://raw.githubusercontent.com/mokjpn/Define2Validate/master/define2validate.R")
-    ```
+
+  ```{r}
+  source("https://raw.githubusercontent.com/mokjpn/Define2Validate/master/define2validate.R")
+  ```
 
 ## Usage
 
 Assume you have your Define-XML file(`Odm_Define.xml`) for your LB domain dataset(`Odm_LB.xml`).
 
 1. Load the required package.
-    ```{r}
-    library(R4DSXML)
-    library(testthat)
-    library(validate)
-    ```
+
+  ```{r}
+  library(R4DSXML)
+  library(testthat)
+  library(validate)
+  ```
+  
 2. Specify domain of your Dataset-XML
-    ```{r}
-    Domain="LB"
-    ```
+
+  ```{r}
+  Domain="LB"
+  ```
+
 3. Call `define2validate()` to make validation rule file for [validate](https://cran.r-project.org/web/packages/validate/index.html) package. Validation rules will be stored in `exampleRules.yaml` file.
-    ```{r}
-    define2validate(Domain, file="exampleRules.yaml", definexml="Odm_Define.xml")
-    ```
+
+  ```{r}
+  define2validate(Domain, file="exampleRules.yaml", definexml="Odm_Define.xml")
+  ```
+
 4. Create `validator` object.
-    ```{r}
-    v <- validator(.file="exampleRules.yaml") 
-    ```
+
+  ```{r}
+  v <- validator(.file="exampleRules.yaml") 
+  ```
+
 5. Read your dataset.
-    ```{r}
-    x <- read.dataset.xml(paste("Odm_", Domain, ".xml", sep=""), "Odm_Define.xml") 
-    ```
+
+  ```{r}
+  x <- read.dataset.xml(paste("Odm_", Domain, ".xml", sep=""), "Odm_Define.xml") 
+  ```
+
 6. Read Controlled Terminology.
-    ```{r}
-    CT <- getCT("Odm_Define.xml")
-    ```
-Note: variable name for controlled terminology is fixed to "CT".
+
+  ```{r}
+  CT <- getCT("Odm_Define.xml")
+  ```
+
+	Note: variable name for controlled terminology is fixed to "CT".
+
 1. Define `%notin%` operator if you use it in your Define-XML's RangeCheck element.
-    ```{r}
-    "%notin%" <- function(x, table) !match(x, table, nomatch = 0) > 0
-    ```
+
+  ```{r}
+  "%notin%" <- function(x, table) !match(x, table, nomatch = 0) > 0
+  ```
+
 7. Do validation and get the summarized result.
-    ```{r}
-    cf <- confront(x,v)
-    summary(cf)
-    ```
+
+  ```{r}
+  cf <- confront(x,v)
+  summary(cf)
+  ```
 
 ## Limitation
 
