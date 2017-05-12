@@ -76,6 +76,10 @@ Assume you have your Define-XML file(`Odm_Define.xml`) for your LB domain datase
   summary(cf)
   ```
 
+## Publication
+
+[Poster presentation at CDISC Europe Interchange 2017](Define2ValidatePoster.pdf)
+
 ## Limitation
 
 1. Currently, inside definition of "Where Clauses" in Define-XML, referred variables must be from the same domain of value lists that uses the where clauses.
